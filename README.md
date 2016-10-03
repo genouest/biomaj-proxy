@@ -1,5 +1,15 @@
 # Running
 
+## Public proxy
+
+For public communication, must be accessible to users
+
+sudo docker run -p 6000:80 -d --name biomaj-public-proxy -e --link biomaj-consul:biomaj-consul -v PATH_TO/nginx-public.ctmpl:/nginx.ctmpl:ro  biomaj-proxy
+
+## Private proxy
+
+For internal communication, must be accessible to services only
+
 sudo docker run -p 5000:80 -d --name biomaj-proxy -e --link biomaj-consul:biomaj-consul -v PATH_TO/nginx.ctmpl:/nginx.ctmpl:ro  biomaj-proxy
 
 # Consul template
