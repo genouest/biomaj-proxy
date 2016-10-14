@@ -10,6 +10,6 @@ RUN apt-get update
 RUN apt-get install -y nginx
 RUN wget https://releases.hashicorp.com/consul-template/0.16.0/consul-template_0.16.0_linux_amd64.zip
 RUN unzip consul-template_0.16.0_linux_amd64.zip && rm consul-template_0.16.0_linux_amd64.zip
-RUN echo "#!/bin/bash\nservice nginx start && /consul-template -consul biomaj-consul:8500 -template \"/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx reload\" -retry 30s" > /nginx-template.sh
+RUN echo "#!/bin/bash\nservice nginx start && /consul-template -consul biomaj-consul:8500 -template \"/proxy/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx reload\" -retry 30s" > /nginx-template.sh
 RUN chmod 755 /nginx-template.sh
 ENTRYPOINT ["/nginx-template.sh"]
