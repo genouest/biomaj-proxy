@@ -1,0 +1,22 @@
+{
+  "name": "biomaj-status",
+  "authors": [
+    "Olivier Sallou <olivier.sallou@irisa.fr>"
+  ],
+  "description": "Get and display biomaj services status",
+  "main": "index.html",
+  "license": "MIT",
+  "homepage": "http://biomaj.genouest.org",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "vis": "^4.17.0",
+    "jquery": "^3.1.1",
+    "bootstrap": "boostrap#^3.3.7"
+  }
+}

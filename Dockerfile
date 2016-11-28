@@ -12,4 +12,5 @@ RUN wget https://releases.hashicorp.com/consul-template/0.16.0/consul-template_0
 RUN unzip consul-template_0.16.0_linux_amd64.zip && rm consul-template_0.16.0_linux_amd64.zip
 RUN echo "#!/bin/bash\nservice nginx start && /consul-template -consul biomaj-consul:8500 -template \"/proxy/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx reload\" -retry 30s" > /nginx-template.sh
 RUN chmod 755 /nginx-template.sh
+COPY status /usr/share/nginx/html/status
 ENTRYPOINT ["/nginx-template.sh"]

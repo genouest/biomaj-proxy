@@ -1,0 +1,164 @@
+
+<!doctype html>
+<html>
+<head>
+  <title>Network | Basic usage</title>
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="bower_components/vis/dist/vis-network.min.js"></script>
+  <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <link href="bower_components/vis/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
+  <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+   <link href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+
+  <style type="text/css">
+    #mynetwork {
+      width: 1200px;
+      height: 800px;
+      border: 1px solid lightgray;
+    }
+
+    p {
+      max-width:1200px;
+    }
+  </style>
+</head>
+<body>
+<h1>Biomaj services status</h1>
+<h2>General status</h2>
+<div class="row">
+<div class="col-sm-2 label label-success">All instances OK</div>
+<div class="col-sm-2 label label-warning">At least one instance OK, but some instances KO</div>
+<div class="col-sm-2 label label-danger">No instance running</div>
+</div>
+<br/>
+<div id="status" class="row"></div>
+<h2>Service network</h2>
+<div id="mynetwork"></div>
+
+<script type="text/javascript">
+LIST_OF_SERVICES = ['biomaj-mongo', 'biomaj-redis', 'biomaj-public-proxy', 'biomaj-internal-proxy', 'biomaj-rabbitmq'];
+global_services = {};
+service_nodes = [];
+service_edges = [];
+
+function add_service_node(service, id){
+    color = '#58FA58';
+    if(!service['status']) {
+        color = '#FF0000';
+    }
+    // console.log('add node' + service['id'] + ':' + service['host'] + ' with id ' + id);
+    service_nodes.push({
+        'id': id,
+        'label': service['id'] + ':' + service['host'],
+        'color': color
+    })
+}
+
+
+function add_service_edge(service, id){
+    if(service['id'] == 'biomaj-daemon'){
+        service_edges.push({from: global_services['biomaj-public-proxy']['counter'], to: id, color:{color:'blue'}});
+        service_edges.push({from: id, to: global_services['biomaj-internal-proxy']['counter'], color:{color:'blue'}});
+        if(global_services['biomaj-rabbitmq']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-rabbitmq']['counter'], color:{color:'red'}});
+        }
+        if(global_services['biomaj-redis']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-redis']['counter'], color:{color:'grey'}});
+        }
+        if(global_services['biomaj-mongo']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-mongo']['counter'], color:{color:'grey'}});
+        }
+    }
+    if(service['id'] == 'biomaj-user'){
+        service_edges.push({from: global_services['biomaj-internal-proxy']['counter'], to: id, color:{color:'blue'}});
+        if(global_services['biomaj-mongo']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-mongo']['counter'], color:{color:'grey'}});
+        }
+    }
+    if(service['id'] == 'biomaj-watcher'){
+        service_edges.push({from: global_services['biomaj-public-proxy']['counter'], to: id, color:{color:'blue'}});
+        service_edges.push({from: id, to: global_services['biomaj-internal-proxy']['counter'], color:{color:'blue'}});
+        if(global_services['biomaj-rabbitmq']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-mongo']['counter'], color:{color:'grey'}});
+        }
+    }
+    if(service['id'] == 'biomaj-process' || service['id'] == 'biomaj-download'){
+        service_edges.push({from: global_services['biomaj-internal-proxy']['counter'], to: id, color:{color:'blue'}});
+        if(global_services['biomaj-rabbitmq']['counter']!==undefined){
+            service_edges.push({from: global_services['biomaj-rabbitmq']['counter'], to: id, color:{color:'blue'}});
+        }
+        if(global_services['biomaj-mongo']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-redis']['counter'], color:{color:'grey'}});
+        }
+    }
+    if(service['id'] == 'biomaj-process-message' || service['id'] == 'biomaj-download-message'){
+        if(global_services['biomaj-rabbitmq']['counter']!==undefined){
+            service_edges.push({from: global_services['biomaj-rabbitmq']['counter'], to: id, color:{color:'red'}});
+        }
+        if(global_services['biomaj-redis']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-redis']['counter'], color:{color:'grey'}});
+        }
+    }
+}
+
+
+function create_network_graph(){
+    // create an array with nodes
+    var nodes = new vis.DataSet(service_nodes);
+
+    // create an array with edges
+    var edges = new vis.DataSet(service_edges);
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {};
+    var network = new vis.Network(container, data, options);
+}
+
+
+$(document).ready(function() {
+    $.getJSON("/api/daemon/status", function(resp) {
+        // console.log(resp);
+        status_info = '';
+        for(var i=0;i<resp['status'].length;i++){
+            var status = resp['status'][i];
+            status_info += "<div class=\"col-sm-2 col-md-2\"><span class=\"label ";
+            label = "label-default";
+            if(status['status'] == -1){
+                label = 'label-danger';
+            } else if (status['status'] == 0) {
+                label = 'label-warning';
+            } else if (status['status'] == 1) {
+                label = 'label-success';
+            }
+            status_info += label + "\"";
+            status_info += ">" + status['service'];
+            status_info += "</span></div>";
+        }
+        $("#status").html(status_info);
+        var count = 1;
+        for(var i=0;i<resp['general_services'].length;i++){
+            resp['general_services'][i]['counter'] = count;
+            add_service_node(resp['general_services'][i], count);
+            if(LIST_OF_SERVICES.indexOf(resp['general_services'][i]['id']) >= 0){
+                global_services[resp['general_services'][i]['id']] = resp['general_services'][i];
+            }
+            count += 1;
+        }
+        for(var i=0;i<resp['biomaj_services'].length;i++){
+            add_service_node(resp['biomaj_services'][i], count);
+            add_service_edge(resp['biomaj_services'][i], count);
+            count += 1;
+        }
+        create_network_graph();
+    });
+});
+
+</script>
+
+</body>
+</html>
