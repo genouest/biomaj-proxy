@@ -99,6 +99,15 @@ function add_service_edge(service, id){
             service_edges.push({from: id, to: global_services['biomaj-redis']['counter'], color:{color:'grey'}});
         }
     }
+    if(service['id'] == 'biomaj-daemon-message'){
+        if(global_services['biomaj-redis']['counter']!==undefined){
+            service_edges.push({from: id, to: global_services['biomaj-redis']['counter'], color:{color:'grey'}});
+        }
+        service_edges.push({from: id, to: global_services['biomaj-internal-proxy']['counter'], color:{color:'blue'}});
+    }
+    if(service['id'] == 'biomaj-ftp'){
+        service_edges.push({from: id, to: global_services['biomaj-internal-proxy']['counter'], color:{color:'blue'}});
+    }
 }
 
 
