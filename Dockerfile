@@ -3,7 +3,7 @@ FROM debian
 MAINTAINER Olivier Sallou <olivier.sallou@irisa.fr>
 
 RUN apt-get update
-RUN apt-get install -y vim wget unzip lsb-release
+RUN apt-get install -y vim wget unzip lsb-release gnupg2
 RUN wget -O - https://nginx.org/keys/nginx_signing.key | apt-key add -
 RUN echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 RUN apt-get update
